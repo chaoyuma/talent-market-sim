@@ -1,8 +1,8 @@
 <script setup>
-// 学生决策参数面板（自动渲染版）
+// 数据配置面板（自动渲染版）
 
 import ConfigField from "./ConfigField.vue";
-import { studentConfigFields } from "../../utils/panelFields";
+import { dataConfigFields } from "../../utils/panelFields";
 
 // 接收父组件的 v-model
 const props = defineProps({
@@ -31,7 +31,7 @@ function updateField(key, value) {
 <template>
   <div>
     <ConfigField
-      v-for="fieldKey in studentConfigFields"
+      v-for="fieldKey in dataConfigFields"
       :key="fieldKey"
       :field-key="fieldKey"
       :value="modelValue[fieldKey]"

@@ -77,6 +77,9 @@ def run_simulation(req):
         return payload
 
     except Exception:
+        # 先回滚当前失败事务，否则 Session 会处于 pending rollback 状态
+        db.rollback()
+        
         update_experiment_status(
             db=db,
             experiment_id=experiment_id,
