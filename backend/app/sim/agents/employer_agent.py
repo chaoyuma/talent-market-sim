@@ -22,27 +22,97 @@ class EmployerAgent(Agent):
         self.open_jobs = []
         self.applications = []
 
+    def _get_industry_major_preferences(self):
+        """
+        给不同行业一个较粗粒度的专业偏好映射，
+        让岗位结构不再完全随机。
+        """
+        industry_map = {
+            "Internet": ["CS", "Finance"],
+            "AI": ["CS", "Finance"],
+            "Finance": ["Finance", "CS"],
+            "Manufacturing": ["Mechanical", "CS"],
+            "Education": ["Education", "CS"],
+            "Healthcare": ["Education", "Finance"],
+        }
+        return industry_map.get(self.industry, self.model.majors)
+
     def publish_jobs(self):
         """
-        岗位发布数量受宏观经济与行业景气影响。
+        岗位发布数量受：
+        1. 宏观经济
+        2. 行业景气
+        3. 政策支持
+        4. 企业成长因子
+        5. 企业基准岗位数
+        共同影响。
+
+        同时，岗位专业分布与企业所属行业存在一定对应关系。
         """
         self.open_jobs = []
 
-        macro_economy = self.model.scenario_config.get("macro_economy", 1.0)
-        industry_boom_factor = self.model.scenario_config.get("industry_boom_factor", 1.0)
+        macro_economy = float(self.model.scenario_config.get("macro_economy", 1.0))
+        industry_boom_factor = float(self.model.scenario_config.get("industry_boom_factor", 1.0))
+        policy_support = float(self.model.scenario_config.get("policy_support", 0.5))
 
-        base_count = random.randint(2, 5)
-        job_count = max(1, int(base_count * macro_economy * industry_boom_factor))
+        # 企业画像参数
+        base_job_count = int(self.profile.get("base_job_count", random.randint(2, 5)))
+        growth_factor = float(self.profile.get("growth_factor", 1.0))
+
+        # 政策支持转为适度的岗位扩张效应，避免过强
+        policy_factor = 1.0 + 0.2 * policy_support
+
+        # 岗位总量
+        raw_job_count = (
+            base_job_count
+            * macro_economy
+            * industry_boom_factor
+            * policy_factor
+            * growth_factor
+        )
+
+        # 增加一点波动，但不要太大
+        raw_job_count *= random.uniform(0.85, 1.15)
+
+        job_count = max(1, int(round(raw_job_count)))
+
+        # 行业对应的偏好专业
+        preferred_majors = self._get_industry_major_preferences()
 
         for _ in range(job_count):
-            major = random.choice(self.model.majors)
+            # 大概率从行业偏好专业里选，小概率从全专业里探索
+            if random.random() < 0.75 and preferred_majors:
+                major = random.choice(preferred_majors)
+            else:
+                major = random.choice(self.model.majors)
+
+            # 技能要求：景气更高时，高要求岗位可略增
+            skill_req = round(
+                min(0.95, max(0.3, random.uniform(0.4, 0.9) + 0.05 * (industry_boom_factor - 1.0))),
+                2
+            )
+
+            # 薪资：受基准薪资、景气、政策支持影响
+            salary_multiplier = random.uniform(0.8, 1.2) * (1 + 0.1 * (industry_boom_factor - 1.0))
+            salary_multiplier *= (1 + 0.05 * policy_support)
+            salary = round(self.base_salary * salary_multiplier, 2)
+
+            # 成长空间：成长型行业景气高时更高
+            career_growth = round(
+                min(1.0, max(0.3, random.uniform(0.4, 0.95) + 0.05 * (growth_factor - 1.0))),
+                2
+            )
+
+            city_tier = round(random.uniform(0.4, 0.95), 2)
+            industry_heat = round(industry_boom_factor * random.uniform(0.8, 1.2), 2)
+
             job = {
                 "major": major,
-                "skill_req": round(random.uniform(0.4, 0.9), 2),
-                "salary": round(self.base_salary * random.uniform(0.8, 1.2), 2),
-                "career_growth": round(random.uniform(0.4, 0.95), 2),
-                "city_tier": round(random.uniform(0.4, 0.95), 2),
-                "industry_heat": round(industry_boom_factor * random.uniform(0.8, 1.2), 2),
+                "skill_req": skill_req,
+                "salary": salary,
+                "career_growth": career_growth,
+                "city_tier": city_tier,
+                "industry_heat": industry_heat,
                 "filled": False,
                 "hired_student_id": None,
             }

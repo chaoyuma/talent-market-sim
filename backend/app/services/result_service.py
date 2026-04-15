@@ -1,7 +1,12 @@
 from datetime import datetime
 
 
-def build_result_payload(req: dict, results: list, experiment_id: str | None = None):
+def build_result_payload(
+    req: dict,
+    results: list,
+    experiment_id: str | None = None,
+    structure_analysis: dict | None = None,
+):
     """
     组织仿真结果返回结构。
     summary 基于最后一轮结果生成，适配当前新版指标口径。
@@ -18,6 +23,7 @@ def build_result_payload(req: dict, results: list, experiment_id: str | None = N
         "final_cross_major_rate": final_result.get("cross_major_rate", 0.0),
         "final_avg_salary": final_result.get("avg_salary", 0.0),
         "final_avg_satisfaction": final_result.get("avg_satisfaction", 0.0),
+        "final_low_satisfaction_employment_rate": final_result.get("low_satisfaction_employment_rate", 0.0),
 
         # 本轮流量指标（取最后一轮）
         "final_active_job_seekers": final_result.get("active_job_seekers", 0),
@@ -36,7 +42,15 @@ def build_result_payload(req: dict, results: list, experiment_id: str | None = N
 
     return {
         "experiment_id": experiment_id,
+        "scenario_name": req.get("scenario_name", "baseline"),
         "params": req,
         "results": results,
         "summary": summary,
+        "structure_analysis": structure_analysis or {
+            "major_supply_demand_gap": [],
+            "major_school_adjustment_bias": [],
+            "major_student_distribution": [],
+            "major_job_distribution": [],
+            "industry_job_distribution": [],
+        },
     }

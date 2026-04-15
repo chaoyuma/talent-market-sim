@@ -4,6 +4,7 @@ from app.repositories.experiment_repository import (
     get_experiment_by_experiment_id,
 )
 from app.repositories.experiment_metric_repository import list_experiment_metrics
+from app.models.report import Report
 
 
 def get_experiment_list():
@@ -28,7 +29,7 @@ def get_experiment_list():
 
 def get_experiment_detail(experiment_id: str):
     """
-    获取单次实验详情，包括主记录和逐轮指标。
+    获取单次实验详情，包括主记录、逐轮指标、历史报告。
     """
     db = SessionLocal()
     try:
@@ -39,16 +40,32 @@ def get_experiment_detail(experiment_id: str):
                 "status": "not_found",
                 "scenario_name": None,
                 "config_snapshot_json": None,
+                "report_summary": None,
+                "report_full_text": None,
                 "metrics": [],
             }
 
         metrics = list_experiment_metrics(db, experiment_id)
+
+        latest_report = (
+            db.query(Report)
+            .filter(Report.experiment_id == experiment_id)
+            .order_by(Report.created_at.desc())
+            .first()
+        )
+        print("DEBUG experiment_id:", experiment_id)
+        print("DEBUG latest_report exists:", latest_report is not None)
+        if latest_report is not None:
+            print("DEBUG report_summary:", latest_report.summary_text[:80] if latest_report.summary_text else None)
+            print("DEBUG report_full_text:", latest_report.full_report_text[:80] if latest_report.full_report_text else None)   
 
         return {
             "experiment_id": experiment.experiment_id,
             "status": experiment.status,
             "scenario_name": experiment.scenario_name,
             "config_snapshot_json": experiment.config_snapshot_json,
+            "report_summary": None if latest_report is None else latest_report.summary_text,
+            "report_full_text": None if latest_report is None else latest_report.full_report_text,
             "metrics": [
                 {
                     "step": m.step,

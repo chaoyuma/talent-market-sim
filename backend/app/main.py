@@ -6,9 +6,11 @@ from app.api.scenario import router as scenario_router
 from app.api.experiment import router as experiment_router
 from app.api.report import router as report_router
 from app.core.config import settings
-from app.api.experiment import router as experiment_router
+
 from app.api.analysis import router as analysis_router
 from app.api.metadata import router as metadata_router
+from app.api.config_template import router as config_template_router
+
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -27,6 +29,7 @@ app.include_router(report_router, prefix="/api/report", tags=["report"])
 app.include_router(experiment_router, prefix="/api/experiment", tags=["experiment"])
 app.include_router(analysis_router, prefix="/api/analysis", tags=["analysis"])
 app.include_router(metadata_router, prefix="/api/metadata", tags=["metadata"])
+app.include_router(config_template_router, prefix="/api/config", tags=["config_template"])
 
 @app.get("/")
 def root():

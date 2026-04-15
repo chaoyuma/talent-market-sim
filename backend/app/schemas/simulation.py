@@ -1,4 +1,8 @@
 from pydantic import BaseModel
+from pydantic import BaseModel
+from typing import Optional
+
+
 
 
 # ================= 基础配置 =================
@@ -86,6 +90,7 @@ class LLMConfig(BaseModel):
 
 # ================= ⭐ 最终请求结构 =================
 class SimulationRequest(BaseModel):
+    scenario_name: Optional[str] = "baseline"
     base_config: BaseConfig = BaseConfig()
     student_config: StudentConfig = StudentConfig()
     employer_config: EmployerConfig = EmployerConfig()
@@ -96,3 +101,7 @@ class SimulationRequest(BaseModel):
     type_config: TypeConfig = TypeConfig()
     data_config: DataConfig = DataConfig()
     llm_config: LLMConfig = LLMConfig()
+
+
+    
+    

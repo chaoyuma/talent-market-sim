@@ -26,10 +26,10 @@ class StudentAgent(Agent):
         self.ability = ability
         self.interest = interest
         self.expected_salary = expected_salary
-        
+
         self.just_matched_this_round = False
         self.received_offers = []
-        
+
         self.student_type = student_type
         self.profile = profile or {}
 
@@ -39,24 +39,26 @@ class StudentAgent(Agent):
         self.matched_job_major = False
         self.current_offer = None
 
-        # 新增：城市偏好、职业成长偏好、满意度
+        # 个体偏好属性
         self.city_preference = self.profile.get("city_preference", random.uniform(0.3, 0.9))
         self.career_growth_preference = self.profile.get("career_growth_preference", random.uniform(0.3, 0.9))
         self.risk_preference = self.profile.get("risk_preference", random.uniform(0.2, 0.8))
         self.satisfaction = 0.0
 
-        # 学生本轮收到的候选 offer
         self.received_offers = []
+
     def reset_round_state(self):
         """
         重置学生本轮临时状态，不清空历史就业结果。
         """
         self.just_matched_this_round = False
         self.received_offers = []
+
     def choose_major(self):
         """
         专业选择：
-        综合考虑兴趣、能力、市场热度、预期薪资和政策支持。
+        综合考虑兴趣、能力、市场热度、预期薪资、政策支持、
+        以及学校供给侧慢反馈形成的专业偏置。
         """
         majors = self.model.majors
         scores = {}
@@ -85,8 +87,11 @@ class StudentAgent(Agent):
             ability_match = self.ability
             salary_score = self.model.major_salary_expectation.get(major, 0.6)
 
-            # 政策支持简化为统一加成，也可后面细化成按专业加成
+            # 政策支持加成
             policy_bonus = 0.1 * policy_support
+
+            # 新增：学校慢反馈对专业供给倾向的影响
+            school_adjustment_bias = self.model.major_school_adjustment_bias.get(major, 0.0)
 
             total_score = (
                 interest_weight * interest_match
@@ -94,6 +99,7 @@ class StudentAgent(Agent):
                 + market_signal_weight * perceived_market_heat
                 + salary_weight * salary_score
                 + policy_bonus
+                + school_adjustment_bias
             )
 
             scores[major] = total_score
@@ -119,6 +125,7 @@ class StudentAgent(Agent):
         """
         岗位投递：
         不只投一个岗位，而是对岗位打分后，投递 top-k 个岗位。
+        同时引入成长偏好与风险偏好。
         """
         if self.employed:
             return
@@ -139,11 +146,23 @@ class StudentAgent(Agent):
                 if job["filled"]:
                     continue
 
-                major_match = 1.0 if job["major"] == self.major else self.model.student_config.get("cross_major_acceptance", 0.7)
+                major_match = (
+                    1.0
+                    if job["major"] == self.major
+                    else self.model.student_config.get("cross_major_acceptance", 0.7)
+                )
                 skill_match = max(0.0, 1 - abs(job["skill_req"] - self.skill))
                 salary_score = min(1.0, job["salary"] / max(self.expected_salary, 1))
                 city_score = 1.0 if job.get("city_tier", 0.5) >= self.city_preference else 0.7
                 growth_score = job.get("career_growth", 0.5)
+
+                # 新增：风险偏好越低，越看重稳定性
+                stability_score = employer.profile.get("stability", 0.6)
+                stability_preference_score = (
+                    (1 - self.risk_preference) * stability_score
+                    + self.risk_preference * 0.5
+                )
+
                 market_score = job.get("industry_heat", 1.0)
 
                 total_score = (
@@ -151,7 +170,8 @@ class StudentAgent(Agent):
                     + 0.25 * skill_match
                     + salary_weight * salary_score
                     + city_weight * city_score
-                    + 0.15 * growth_score
+                    + 0.15 * (self.career_growth_preference * growth_score)
+                    + 0.10 * stability_preference_score
                     + market_signal_weight * market_score
                 )
 
@@ -159,6 +179,7 @@ class StudentAgent(Agent):
 
         candidate_jobs.sort(key=lambda x: x[0], reverse=True)
 
+        # 前若干名中保留一定探索性，避免全是死板 top-k
         top_pool = candidate_jobs[: min(len(candidate_jobs), 20)]
         selected_jobs = []
 
@@ -188,6 +209,7 @@ class StudentAgent(Agent):
     def choose_offer(self):
         """
         若收到多个 offer，则学生基于效用函数选择一个最优岗位。
+        引入成长偏好与风险偏好，体现职业发展与稳定性差异。
         """
         if self.employed or not self.received_offers:
             return
@@ -197,17 +219,24 @@ class StudentAgent(Agent):
 
         for employer, job in self.received_offers:
             salary_score = min(1.2, job["salary"] / max(self.expected_salary, 1))
-            major_match = 1.0 if job["major"] == self.major else 0.6
+            major_match = (
+                1.0
+                if job["major"] == self.major
+                else self.model.student_config.get("cross_major_acceptance", 0.7)
+            )
             city_score = 1.0 if job.get("city_tier", 0.5) >= self.city_preference else 0.7
             growth_score = job.get("career_growth", 0.5)
             stability_score = employer.profile.get("stability", 0.6)
+
+            growth_component = self.career_growth_preference * growth_score
+            stability_component = (1 - self.risk_preference) * stability_score
 
             utility = (
                 0.30 * salary_score
                 + 0.25 * major_match
                 + 0.15 * city_score
-                + 0.20 * growth_score
-                + 0.10 * stability_score
+                + 0.20 * growth_component
+                + 0.10 * stability_component
             )
 
             if utility > best_utility:
@@ -224,22 +253,32 @@ class StudentAgent(Agent):
             chosen_job["hired_student_id"] = self.unique_id
 
             # 计算满意度
-            self.satisfaction = self._calculate_satisfaction(chosen_job)
+            self.satisfaction = self._calculate_satisfaction(chosen_job, best_offer[0])
 
         self.received_offers = []
 
-    def _calculate_satisfaction(self, job):
+    def _calculate_satisfaction(self, job, employer=None):
         """
-        满意度：薪资、专业匹配、城市、成长空间的综合。
+        满意度：薪资、专业匹配、城市、成长空间、稳定性的综合。
         """
         salary_satisfaction = min(1.2, job["salary"] / max(self.expected_salary, 1))
-        major_match = 1.0 if job["major"] == self.major else 0.6
+        major_match = (
+            1.0
+            if job["major"] == self.major
+            else self.model.student_config.get("cross_major_acceptance", 0.7)
+        )
         city_match = 1.0 if job.get("city_tier", 0.5) >= self.city_preference else 0.7
-        growth_match = job.get("career_growth", 0.5)
+        growth_match = self.career_growth_preference * job.get("career_growth", 0.5)
+
+        stability_score = 0.6
+        if employer is not None:
+            stability_score = employer.profile.get("stability", 0.6)
+        stability_match = (1 - self.risk_preference) * stability_score
 
         return (
-            0.35 * salary_satisfaction
+            0.30 * salary_satisfaction
             + 0.25 * major_match
             + 0.15 * city_match
-            + 0.25 * growth_match
+            + 0.20 * growth_match
+            + 0.10 * stability_match
         )

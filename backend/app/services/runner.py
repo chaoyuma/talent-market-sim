@@ -16,16 +16,30 @@ from app.repositories.experiment_metric_repository import (
 
 
 def run_simulation(req):
+    """
+    执行一次完整仿真流程。
+
+    流程包括：
+    1. 创建实验主记录
+    2. 构建模型并运行
+    3. 写入每轮指标
+    4. 更新实验状态
+    5. 组织最终返回结果
+    6. 备份 JSON 输出
+    """
     experiment_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     db = SessionLocal()
+
+    # 将请求对象统一转成 dict，后续用于入库与结果返回
+    req_dict = req.model_dump()
 
     try:
         # 1. 创建实验主记录
         create_experiment(
             db=db,
             experiment_id=experiment_id,
-            config_snapshot_json=req.model_dump(),
-            scenario_name="baseline",
+            config_snapshot_json=req_dict,
+            scenario_name=req.scenario_name or "baseline",
             status="running",
         )
 
@@ -60,15 +74,16 @@ def run_simulation(req):
 
         # 5. 组织返回 payload
         payload = build_result_payload(
-            req=req.model_dump(),
+            req=req_dict,
             results=results,
             experiment_id=experiment_id,
+            structure_analysis=model.latest_structure_analysis,
         )
 
         # 6. 补充实际运行规模信息
         payload["actual_runtime"] = model.get_runtime_info()
 
-        # 7. 继续保留 JSON 备份
+        # 7. 保留 JSON 备份
         project_root = Path(__file__).resolve().parents[2]
         output_dir = project_root / settings.OUTPUT_DIR
         output_dir.mkdir(parents=True, exist_ok=True)

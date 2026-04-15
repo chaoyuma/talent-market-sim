@@ -56,6 +56,9 @@ class SchoolAgent(Agent):
         """
         基于长时滞反馈调整专业容量。
         学校反馈慢于企业，因此采用历史窗口平均值。
+
+        同时把本轮各专业的容量调整偏置写回模型，
+        供结构分析模块展示。
         """
         lag = int(self.model.school_feedback_lag)
         speed = float(self.model.school_config.get("capacity_adjust_speed", 0.1))
@@ -84,9 +87,21 @@ class SchoolAgent(Agent):
 
             # 以 0.7 作为中性点
             adjustment_factor = 1 + speed * (signal - 0.7)
-            new_capacity = int(max(5, old_capacity * adjustment_factor))
+            new_capacity = max(5, round(old_capacity * adjustment_factor))
 
             self.major_capacity[major] = new_capacity
+
+            # 记录该学校在该专业上的相对调整偏置
+            # 正值表示扩招，负值表示缩招
+            bias = 0.0
+            if old_capacity > 0:
+                bias = (new_capacity - old_capacity) / old_capacity
+
+            if major not in self.model.major_school_adjustment_bias:
+                self.model.major_school_adjustment_bias[major] = []
+
+            self.model.major_school_adjustment_bias[major].append(bias)
+            print(f"DEBUG school={self.name}, major={major}, old={old_capacity}, new={new_capacity}, bias={bias}")
 
     def adjust_training_quality(self):
         """

@@ -1,11 +1,10 @@
-from sqlalchemy.orm import Session
 from app.models.report import Report
 
 
 def create_report(
-    db: Session,
+    db,
     experiment_id: str,
-    report_type: str = "summary",
+    report_type: str = "llm_explanation",
     summary_text: str | None = None,
     full_report_text: str | None = None,
 ):
@@ -19,7 +18,3 @@ def create_report(
     db.commit()
     db.refresh(obj)
     return obj
-
-
-def list_reports(db: Session, experiment_id: str):
-    return db.query(Report).filter(Report.experiment_id == experiment_id).all()

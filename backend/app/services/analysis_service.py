@@ -132,7 +132,7 @@ def call_openai_style_llm(
         "messages": [
             {
                 "role": "system",
-                "content": "你是一名擅长解释仿真实验结果的中文分析助手。",
+                "content": "你是一名擅长解释仿真实验结果的中文分析专家。",
             },
             {
                 "role": "user",

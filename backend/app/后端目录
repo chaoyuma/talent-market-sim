@@ -1,0 +1,147 @@
+卷 新加卷 的文件夹 PATH 列表
+卷序列号为 50A3-49AC
+D:.
+│  backend-app.txt
+│  main.py
+│  __init__.py
+│  后端目录
+│  
+├─api
+│  │  analysis.py
+│  │  config_template.py
+│  │  experiment.py
+│  │  metadata.py
+│  │  report.py
+│  │  scenario.py
+│  │  simulation.py
+│  │  __init__.py
+│  │  
+│  └─__pycache__
+│          analysis.cpython-310.pyc
+│          config_template.cpython-310.pyc
+│          experiment.cpython-310.pyc
+│          metadata.cpython-310.pyc
+│          report.cpython-310.pyc
+│          scenario.cpython-310.pyc
+│          simulation.cpython-310.pyc
+│          __init__.cpython-310.pyc
+│          
+├─core
+│  │  config.py
+│  │  database.py
+│  │  
+│  └─__pycache__
+│          config.cpython-310.pyc
+│          database.cpython-310.pyc
+│          
+├─data
+│  │  seeders.py
+│  │  __init__,py
+│  │  
+│  └─__pycache__
+│          seeders.cpython-310.pyc
+│          
+├─models
+│  │  config_template.py
+│  │  employer.py
+│  │  experiment.py
+│  │  experiment_metric.py
+│  │  job.py
+│  │  major.py
+│  │  major_industry_mapping.py
+│  │  report.py
+│  │  school.py
+│  │  student.py
+│  │  system_metadata.py
+│  │  __init__.py
+│  │  
+│  ├─backend
+│  │  └─app
+│  │      └─repositories
+│  └─__pycache__
+│          config_template.cpython-310.pyc
+│          employer.cpython-310.pyc
+│          experiment.cpython-310.pyc
+│          experiment_metric.cpython-310.pyc
+│          job.cpython-310.pyc
+│          major.cpython-310.pyc
+│          major_industry_mapping.cpython-310.pyc
+│          report.cpython-310.pyc
+│          school.cpython-310.pyc
+│          student.cpython-310.pyc
+│          system_metadata.cpython-310.pyc
+│          __init__.cpython-310.pyc
+│          
+├─repositories
+│  │  config_template_repository.py
+│  │  employer_repository.py
+│  │  experiment_metric_repository.py
+│  │  experiment_repository.py
+│  │  job_repository.py
+│  │  major_repository.py
+│  │  report_repository.py
+│  │  school_repository.py
+│  │  student_repository.py
+│  │  system_metadata_repository.py
+│  │  
+│  ├─backend
+│  │  └─app
+│  │      └─repositories
+│  └─__pycache__
+│          config_template_repository.cpython-310.pyc
+│          employer_repository.cpython-310.pyc
+│          experiment_metric_repository.cpython-310.pyc
+│          experiment_repository.cpython-310.pyc
+│          job_repository.cpython-310.pyc
+│          major_repository.cpython-310.pyc
+│          report_repository.cpython-310.pyc
+│          school_repository.cpython-310.pyc
+│          student_repository.cpython-310.pyc
+│          system_metadata_repository.cpython-310.pyc
+│          
+├─schemas
+│  │  simulation.py
+│  │  
+│  └─__pycache__
+│          simulation.cpython-310.pyc
+│          
+├─services
+│  │  analysis_service.py
+│  │  config_template_service.py
+│  │  data_manage_service.py
+│  │  experiment_service.py
+│  │  result_service.py
+│  │  runner.py
+│  │  system_metadata_service.py
+│  │  
+│  └─__pycache__
+│          analysis_service.cpython-310.pyc
+│          config_template_service.cpython-310.pyc
+│          data_manage_service.cpython-310.pyc
+│          experiment_service.cpython-310.pyc
+│          result_service.cpython-310.pyc
+│          runner.cpython-310.pyc
+│          system_metadata_service.cpython-310.pyc
+│          
+├─sim
+│  │  model.py
+│  │  profiles.py
+│  │  
+│  ├─agents
+│  │  │  employer_agent.py
+│  │  │  school_agent.py
+│  │  │  student_agent.py
+│  │  │  
+│  │  └─__pycache__
+│  │          employer_agent.cpython-310.pyc
+│  │          school_agent.cpython-310.pyc
+│  │          student_agent.cpython-310.pyc
+│  │          
+│  └─__pycache__
+│          model.cpython-310.pyc
+│          profiles.cpython-310.pyc
+│          
+└─__pycache__
+        main.cpython-310.pyc
+        __init__.cpython-310.pyc
+        
