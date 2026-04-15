@@ -7,6 +7,8 @@ from app.api.experiment import router as experiment_router
 from app.api.report import router as report_router
 from app.core.config import settings
 from app.api.experiment import router as experiment_router
+from app.api.analysis import router as analysis_router
+from app.api.metadata import router as metadata_router
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -23,7 +25,8 @@ app.include_router(scenario_router, prefix="/api/scenario", tags=["scenario"])
 app.include_router(experiment_router, prefix="/api/experiment", tags=["experiment"])
 app.include_router(report_router, prefix="/api/report", tags=["report"])
 app.include_router(experiment_router, prefix="/api/experiment", tags=["experiment"])
-
+app.include_router(analysis_router, prefix="/api/analysis", tags=["analysis"])
+app.include_router(metadata_router, prefix="/api/metadata", tags=["metadata"])
 
 @app.get("/")
 def root():

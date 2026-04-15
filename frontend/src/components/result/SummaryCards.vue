@@ -1,9 +1,8 @@
 <script setup>
-import InfoTip from "../common/InfoTip.vue";
-import { resultMeta } from "../../utils/fieldMeta";
+// 结果摘要卡片组件
 
-// 结果卡片组件
-// cards 由父组件传入，格式见 buildStatCards 的输出
+import InfoTip from "../common/InfoTip.vue";
+
 defineProps({
   cards: {
     type: Array,
@@ -14,40 +13,42 @@ defineProps({
 
 <template>
   <div
+    class="section-gap"
     style="
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px;
-      margin-bottom: 24px;
     "
   >
     <div
       v-for="card in cards"
       :key="card.key"
-      style="
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 16px;
-        background: #fff;
-      "
+      class="ui-card"
+      style="min-height: 88px;"
     >
       <div
         style="
-          color: #666;
-          font-size: 14px;
-          margin-bottom: 8px;
           display: flex;
           align-items: center;
+          gap: 6px;
+          margin-bottom: 10px;
+          color: #667085;
+          font-size: 14px;
+          font-weight: 500;
         "
       >
-        <span>{{ card.label }}</span>
-        <InfoTip
-          v-if="resultMeta[card.key]"
-          :text="resultMeta[card.key].tooltip"
-        />
+        <span>{{ card.title }}</span>
+        <InfoTip v-if="card.tooltip" :text="card.tooltip" />
       </div>
 
-      <div style="font-size: 24px; font-weight: bold;">
+      <div
+        style="
+          font-size: 18px;
+          font-weight: 700;
+          color: #101828;
+          line-height: 1.2;
+        "
+      >
         {{ card.value }}
       </div>
     </div>

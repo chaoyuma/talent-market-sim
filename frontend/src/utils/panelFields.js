@@ -25,6 +25,7 @@ export const schoolConfigFields = [
   "employment_feedback_weight",
   "market_feedback_weight",
   "adjustment_lag",
+  "resource_support",
 ];
 
 export const employerConfigFields = [
@@ -33,6 +34,8 @@ export const employerConfigFields = [
   "hire_threshold",
   "cross_major_tolerance",
   "salary_elasticity",
+  "threshold_relax_speed",
+  "tolerance_increase_speed",
 ];
 
 export const scenarioConfigFields = [
@@ -46,6 +49,8 @@ export const advancedScenarioFields = [
   "city_attractiveness_gap",
   "technology_change_rate",
   "information_shock",
+  "enterprise_feedback_lag",
+  "school_feedback_lag",
 ];
 
 export const dataConfigFields = [

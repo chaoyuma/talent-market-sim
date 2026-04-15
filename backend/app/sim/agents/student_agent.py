@@ -139,7 +139,7 @@ class StudentAgent(Agent):
                 if job["filled"]:
                     continue
 
-                major_match = 1.0 if job["major"] == self.major else student_cfg.get("cross_major_acceptance", 0.7)
+                major_match = 1.0 if job["major"] == self.major else self.model.student_config.get("cross_major_acceptance", 0.7)
                 skill_match = max(0.0, 1 - abs(job["skill_req"] - self.skill))
                 salary_score = min(1.0, job["salary"] / max(self.expected_salary, 1))
                 city_score = 1.0 if job.get("city_tier", 0.5) >= self.city_preference else 0.7
@@ -159,8 +159,24 @@ class StudentAgent(Agent):
 
         candidate_jobs.sort(key=lambda x: x[0], reverse=True)
 
-        # 投递 top-k 个岗位
-        for _, employer, job in candidate_jobs[:max_applications]:
+        top_pool = candidate_jobs[: min(len(candidate_jobs), 20)]
+        selected_jobs = []
+
+        strict_count = max(1, int(max_applications * 0.7))
+        selected_jobs.extend(top_pool[:strict_count])
+
+        remaining_needed = max_applications - len(selected_jobs)
+        if remaining_needed > 0:
+            remaining_pool = top_pool[strict_count:]
+            if remaining_pool:
+                selected_jobs.extend(
+                    random.sample(
+                        remaining_pool,
+                        k=min(remaining_needed, len(remaining_pool))
+                    )
+                )
+
+        for _, employer, job in selected_jobs:
             employer.receive_application(self, job)
 
     def receive_offer(self, employer, job):

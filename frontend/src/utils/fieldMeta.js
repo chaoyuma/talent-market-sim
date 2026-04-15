@@ -1,31 +1,35 @@
 // 参数说明与结果说明
-// 增加了字段输入类型和表单约束，供 ConfigField.vue 自动渲染。
+// 这一版补齐了常用参数的 type / min / max / step / options
+// 供 ConfigField.vue 自动渲染，并显示“范围 + 步长”。
 
 export const fieldMeta = {
+  // =========================
+  // 基础实验参数
+  // =========================
   num_students: {
     label: "学生数量",
-    tooltip: "本次实验参与仿真的学生主体数量。若数据模式为 database，则以数据库实际数据为准。",
+    tooltip: "本次实验请求的学生数量。若使用 database 模式，最终实际参与数量以数据库实际加载结果为准。",
     type: "number",
     min: 1,
     step: 1,
   },
   num_schools: {
     label: "学校数量",
-    tooltip: "本次实验参与仿真的学校主体数量。若数据模式为 database，则以数据库实际数据为准。",
+    tooltip: "本次实验请求的学校数量。若使用 database 模式，最终实际参与数量以数据库实际加载结果为准。",
     type: "number",
     min: 1,
     step: 1,
   },
   num_employers: {
     label: "企业数量",
-    tooltip: "本次实验参与仿真的企业主体数量。若数据模式为 database，则以数据库实际数据为准。",
+    tooltip: "本次实验请求的企业数量。若使用 database 模式，最终实际参与数量以数据库实际加载结果为准。",
     type: "number",
     min: 1,
     step: 1,
   },
   steps: {
     label: "仿真轮次",
-    tooltip: "系统运行的时间步数量。轮次越多，越适合观察供需错配的动态演化过程。",
+    tooltip: "系统运行的时间步数量。轮次越多，越适合观察供需错配和反馈演化过程。",
     type: "number",
     min: 1,
     step: 1,
@@ -38,38 +42,44 @@ export const fieldMeta = {
     step: 1,
   },
 
+  // =========================
+  // 数据配置参数
+  // =========================
   data_mode: {
     label: "数据模式",
-    tooltip: "database 表示从数据库读取，synthetic 表示按参数生成，hybrid 表示混合模式。",
+    tooltip: "database 表示从数据库读取，synthetic 表示按规则生成，hybrid 表示数据库与生成数据混合。",
     type: "select",
     options: ["database", "synthetic", "hybrid"],
   },
   use_census_distribution: {
     label: "按人口分布生成",
-    tooltip: "是否按预设人口或分布规则生成模拟主体。主要用于 synthetic 或 hybrid 模式。",
+    tooltip: "是否按人口普查或预设分布规则生成模拟主体。",
     type: "checkbox",
   },
   auto_generate_missing_data: {
     label: "自动补齐缺失数据",
-    tooltip: "当数据库主体数量不足时，是否自动按规则补齐缺失主体。",
+    tooltip: "当数据库主体数量不足时，是否自动按规则补齐主体。",
     type: "checkbox",
   },
   student_data_path: {
     label: "学生数据路径",
-    tooltip: "外部学生数据文件路径。当前阶段可先留空，后续支持导入。",
+    tooltip: "外部学生数据文件路径。当前阶段可留空，后续支持导入。",
     type: "text",
   },
   school_data_path: {
     label: "学校数据路径",
-    tooltip: "外部学校数据文件路径。当前阶段可先留空，后续支持导入。",
+    tooltip: "外部学校数据文件路径。当前阶段可留空，后续支持导入。",
     type: "text",
   },
   employer_data_path: {
     label: "企业数据路径",
-    tooltip: "外部企业数据文件路径。当前阶段可先留空，后续支持导入。",
+    tooltip: "外部企业数据文件路径。当前阶段可留空，后续支持导入。",
     type: "text",
   },
 
+  // =========================
+  // 学生决策参数
+  // =========================
   interest_weight: {
     label: "兴趣权重",
     tooltip: "学生在选择专业和岗位时，对个人兴趣偏好的重视程度。",
@@ -120,7 +130,7 @@ export const fieldMeta = {
   },
   information_transparency: {
     label: "信息透明度",
-    tooltip: "学生获取市场信息的充分程度。",
+    tooltip: "学生获取市场信息的充分程度。越高表示越接近真实市场信号。",
     type: "number",
     min: 0,
     max: 1,
@@ -134,6 +144,9 @@ export const fieldMeta = {
     step: 1,
   },
 
+  // =========================
+  // 企业反馈参数
+  // =========================
   major_preference_strength: {
     label: "专业偏好强度",
     tooltip: "企业招聘时对专业对口程度的重视程度。",
@@ -152,7 +165,7 @@ export const fieldMeta = {
   },
   hire_threshold: {
     label: "招聘阈值",
-    tooltip: "企业录用候选人的最低评分要求。",
+    tooltip: "企业录用候选人的最低评分要求。越高表示招聘更严格。",
     type: "number",
     min: 0,
     max: 1,
@@ -173,7 +186,24 @@ export const fieldMeta = {
     min: 0,
     step: 0.01,
   },
+  threshold_relax_speed: {
+    label: "阈值放宽速度",
+    tooltip: "当岗位招不满时，企业降低招聘阈值的速度。值越大，企业越快放宽标准。",
+    type: "number",
+    min: 0,
+    step: 0.01,
+  },
+  tolerance_increase_speed: {
+    label: "跨专业放宽速度",
+    tooltip: "当岗位招不满时，企业提高跨专业容忍度的速度。",
+    type: "number",
+    min: 0,
+    step: 0.01,
+  },
 
+  // =========================
+  // 学校反馈参数
+  // =========================
   training_quality: {
     label: "培养质量",
     tooltip: "学校对学生能力提升的支持程度。",
@@ -183,8 +213,8 @@ export const fieldMeta = {
     step: 0.01,
   },
   capacity_adjust_speed: {
-    label: "招生调整速度",
-    tooltip: "学校根据市场反馈调整专业招生规模的速度。",
+    label: "容量调整速度",
+    tooltip: "学校根据反馈调整专业容量的速度。",
     type: "number",
     min: 0,
     max: 1,
@@ -200,7 +230,7 @@ export const fieldMeta = {
   },
   market_feedback_weight: {
     label: "市场反馈权重",
-    tooltip: "学校在调整专业规模时，对市场热度和岗位需求信号的重视程度。",
+    tooltip: "学校在调整专业规模时，对市场热度与岗位需求信号的重视程度。",
     type: "number",
     min: 0,
     max: 1,
@@ -208,12 +238,22 @@ export const fieldMeta = {
   },
   adjustment_lag: {
     label: "调整滞后",
-    tooltip: "学校对市场变化作出反应的滞后期。",
+    tooltip: "学校内部机制响应市场变化的滞后期。",
     type: "number",
     min: 0,
     step: 1,
   },
+  resource_support: {
+    label: "资源支持强度",
+    tooltip: "学校在扩招或培养压力下维持教学质量的资源支撑能力。",
+    type: "number",
+    min: 0,
+    step: 0.01,
+  },
 
+  // =========================
+  // 场景参数
+  // =========================
   macro_economy: {
     label: "宏观景气度",
     tooltip: "宏观经济环境对岗位总需求的影响系数。",
@@ -236,7 +276,6 @@ export const fieldMeta = {
     min: 0,
     step: 0.01,
   },
-
   market_heat_amplification: {
     label: "热门专业放大系数",
     tooltip: "市场热度对学生选择的放大程度。",
@@ -265,10 +304,27 @@ export const fieldMeta = {
     min: 0,
     step: 0.01,
   },
+  enterprise_feedback_lag: {
+    label: "企业反馈时滞",
+    tooltip: "企业每隔多少轮才根据招聘结果调整一次策略。值越小反馈越快。",
+    type: "number",
+    min: 1,
+    step: 1,
+  },
+  school_feedback_lag: {
+    label: "学校反馈时滞",
+    tooltip: "学校每隔多少轮才根据就业与市场反馈调整容量和培养质量。值越大反馈越慢。",
+    type: "number",
+    min: 1,
+    step: 1,
+  },
 
+  // =========================
+  // LLM 参数
+  // =========================
   enabled: {
     label: "启用大模型",
-    tooltip: "是否启用大模型增强模块，用于场景生成、结果解释和报告生成。",
+    tooltip: "是否启用大模型增强模块。",
     type: "checkbox",
   },
   use_for_scenario_generation: {
@@ -309,28 +365,64 @@ export const fieldMeta = {
 };
 
 export const resultMeta = {
-  final_employment_rate: {
-    label: "就业率",
-    tooltip: "已就业学生人数占全部学生人数的比例，反映学生整体就业情况。",
+  employment_rate: {
+    label: "累计就业率",
+    tooltip: "截至当前轮，已就业学生占全部学生的比例。",
   },
-  final_matching_rate: {
-    label: "对口率",
-    tooltip: "已就业学生中，专业与岗位要求相匹配的比例，反映专业对口程度。",
+  matching_rate: {
+    label: "累计对口率",
+    tooltip: "截至当前轮，已就业学生中专业与岗位对口的比例。",
   },
-  final_cross_major_rate: {
-    label: "跨专业率",
-    tooltip: "已就业学生中，从事非本专业岗位的比例，反映跨专业流动情况。",
+  cross_major_rate: {
+    label: "累计跨专业率",
+    tooltip: "截至当前轮，已就业学生中从事非本专业岗位的比例。",
   },
-  final_vacancy_rate: {
-    label: "岗位空缺率",
-    tooltip: "未被填补岗位占总岗位数的比例，反映企业招聘难度和市场供需紧张程度。",
+  avg_salary: {
+    label: "累计平均薪资",
+    tooltip: "截至当前轮，已就业学生岗位薪资的平均值。",
   },
-  final_filled_jobs: {
-    label: "已填岗位数",
-    tooltip: "本次实验中成功完成招聘的岗位数量。",
+  avg_satisfaction: {
+    label: "累计满意度",
+    tooltip: "截至当前轮，已就业学生对岗位结果的平均满意度。",
   },
-  final_avg_salary: {
-    label: "平均薪资",
-    tooltip: "已就业学生获得岗位的平均薪资水平。",
+  round_new_employment_rate: {
+    label: "本轮新增就业率",
+    tooltip: "本轮新就业学生占全部学生的比例。",
+  },
+  round_job_count: {
+    label: "本轮岗位数",
+    tooltip: "本轮企业发布的岗位总数。",
+  },
+  round_filled_jobs: {
+    label: "本轮已填岗位",
+    tooltip: "本轮成功完成招聘的岗位数量。",
+  },
+  round_vacancy_rate: {
+    label: "本轮空缺率",
+    tooltip: "本轮岗位中未被填补的比例。",
+  },
+  active_job_seekers: {
+    label: "活跃求职人数",
+    tooltip: "当前轮结束后仍未就业、仍处于求职状态的学生数量。",
+  },
+  mismatch_index: {
+    label: "结构错配指数",
+    tooltip: "学生专业供给结构与岗位需求结构之间的偏差程度。",
+  },
+  herding_index: {
+    label: "扎堆指数",
+    tooltip: "学生集中选择热门专业的程度，越大表示越扎堆。",
+  },
+  avg_hire_threshold: {
+    label: "平均招聘阈值",
+    tooltip: "当前企业整体平均招聘门槛。",
+  },
+  avg_cross_major_tolerance: {
+    label: "平均跨专业容忍度",
+    tooltip: "当前企业整体平均跨专业接受程度。",
+  },
+  avg_training_quality: {
+    label: "平均培养质量",
+    tooltip: "当前学校整体平均培养质量水平。",
   },
 };

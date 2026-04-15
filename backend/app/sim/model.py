@@ -41,6 +41,10 @@ class TalentMarketModel(Model):
         self.num_schools = base_config["num_schools"]
         self.num_employers = base_config["num_employers"]
 
+        # 新增：反馈时滞参数
+        self.enterprise_feedback_lag = int(self.scenario_config.get("enterprise_feedback_lag", 2))
+        self.school_feedback_lag = int(self.scenario_config.get("school_feedback_lag", 4))
+
         random.seed(base_config["random_seed"])
 
         self.majors = ["CS", "Finance", "Mechanical", "Education"]
@@ -51,7 +55,7 @@ class TalentMarketModel(Model):
             "Education": 0.7,
         }
 
-        # 新增：学生专业选择时用到的专业薪资预期
+        # 学生选专业时使用的薪资预期
         self.major_salary_expectation = {
             "CS": 0.95,
             "Finance": 0.85,
@@ -71,7 +75,7 @@ class TalentMarketModel(Model):
 
         self._create_agents()
 
-        # 新增：学生学习阶段用到的学校平均培养质量
+        # 学习阶段使用的学校平均培养质量
         self.school_training_quality_avg = self._calculate_school_training_quality_avg()
 
     def _create_agents(self):
@@ -83,7 +87,6 @@ class TalentMarketModel(Model):
                 m.major_name: float(m.heat_init) for m in db_majors
             }
 
-            # 如果数据库里有薪资预期字段，可替换成真实字段
             self.major_salary_expectation = {
                 m.major_name: float(getattr(m, "salary_expectation", 0.7) or 0.7)
                 for m in db_majors
@@ -104,6 +107,15 @@ class TalentMarketModel(Model):
                 random.choice(list(SCHOOL_TYPE_PROFILES.values()))
             )
 
+            # 将当前 school_config 注入画像，保证可控
+            school_profile = {
+                **school_profile,
+                "training_quality": self.school_config.get(
+                    "training_quality",
+                    school_profile.get("training_quality", 0.7),
+                ),
+            }
+
             school = SchoolAgent(
                 unique_id=f"school_{s.id}",
                 model=self,
@@ -123,7 +135,6 @@ class TalentMarketModel(Model):
                 random.choice(list(EMPLOYER_TYPE_PROFILES.values()))
             )
 
-            # 保证企业画像里带有当前配置参数
             employer_profile = {
                 **employer_profile,
                 "major_preference_strength": self.employer_config.get(
@@ -204,7 +215,10 @@ class TalentMarketModel(Model):
         return sum(qualities) / len(qualities) if qualities else 0.7
 
     def step(self, step_idx: int):
-        # 0. 重置本轮临时状态
+        """
+        单轮仿真主流程
+        """
+        # 0. 重置学生本轮临时状态
         for student in self.students:
             if hasattr(student, "reset_round_state"):
                 student.reset_round_state()
@@ -214,10 +228,10 @@ class TalentMarketModel(Model):
             if student.major is None:
                 student.choose_major()
 
-        # 2. 每轮开始时重新计算学校平均培养质量
+        # 2. 每轮开始前更新学校平均培养质量
         self.school_training_quality_avg = self._calculate_school_training_quality_avg()
 
-        # 3. 学习能力演化
+        # 3. 学生学习
         for student in self.students:
             student.study()
 
@@ -225,54 +239,63 @@ class TalentMarketModel(Model):
         active_job_seekers = [s for s in self.students if not s.employed]
 
         if active_job_seekers:
+            # 企业发布岗位
             for employer in self.employers:
                 employer.publish_jobs()
 
+            # 学生投递
             for student in active_job_seekers:
                 student.apply_jobs()
 
+            # 企业发 offer
             for employer in self.employers:
                 employer.hire()
 
+            # 学生选 offer
             for student in active_job_seekers:
                 student.choose_offer()
         else:
+            # 无活跃求职者，本轮不再发岗位
             for employer in self.employers:
                 employer.open_jobs = []
 
-        # 5. 企业调整招聘策略
-        for employer in self.employers:
-            employer.adjust_strategy()
+        # 5. 企业反馈：短时滞
+        if (step_idx + 1) % self.enterprise_feedback_lag == 0:
+            for employer in self.employers:
+                employer.adjust_strategy()
 
-        # 6. 学校反馈
-        for school in self.schools:
-            if hasattr(school, "adjust_major_capacity"):
-                school.adjust_major_capacity()
-            if hasattr(school, "adjust_training_quality"):
-                school.adjust_training_quality()
-            elif hasattr(school, "adjust_capacity"):
-                school.adjust_capacity()
-
-        # 7. 更新专业统计
+        # 6. 更新专业统计
         self.update_major_stats()
 
-        # 8. 记录指标
+        # 7. 学校先记录反馈
+        for school in self.schools:
+            if hasattr(school, "record_feedback"):
+                school.record_feedback()
+
+        # 8. 学校反馈：长时滞
+        if (step_idx + 1) % self.school_feedback_lag == 0:
+            for school in self.schools:
+                if hasattr(school, "adjust_major_capacity"):
+                    school.adjust_major_capacity()
+                if hasattr(school, "adjust_training_quality"):
+                    school.adjust_training_quality()
+                elif hasattr(school, "adjust_capacity"):
+                    school.adjust_capacity()
+
+        # 9. 记录指标
         metrics = self.collect_metrics(step_idx)
         self.metrics_history.append(metrics)
 
     def collect_metrics(self, step_idx: int):
         total_students = len(self.students)
 
-        # 存量口径：截至当前轮，已经就业的人
+        # 存量口径
         employed_students = [s for s in self.students if s.employed]
 
-        # 流量口径：本轮新就业的人
+        # 流量口径
         newly_employed_students = [s for s in self.students if getattr(s, "just_matched_this_round", False)]
-
-        # 本轮仍在找工作的学生
         active_job_seekers = [s for s in self.students if not s.employed]
 
-        # 本轮岗位
         all_jobs = [job for e in self.employers for job in e.open_jobs]
         round_job_count = len(all_jobs)
         round_filled_jobs = sum(1 for j in all_jobs if j["filled"])
@@ -281,7 +304,6 @@ class TalentMarketModel(Model):
             if round_job_count > 0 else 0.0
         )
 
-        # 累计指标
         employment_rate = len(employed_students) / total_students if total_students else 0.0
 
         matching_count = sum(1 for s in employed_students if s.matched_job_major)
@@ -302,7 +324,6 @@ class TalentMarketModel(Model):
             if employed_students else 0.0
         )
 
-        # 本轮新增就业率
         round_new_employment_rate = (
             len(newly_employed_students) / total_students
             if total_students else 0.0
@@ -321,8 +342,18 @@ class TalentMarketModel(Model):
             if self.employers else 0.0
         )
 
+        avg_training_quality = (
+            sum(school.training_quality for school in self.schools) / len(self.schools)
+            if self.schools else 0.0
+        )
+
         return {
             "step": step_idx,
+
+            # 实际参与规模
+            "student_count": len(self.students),
+            "school_count": len(self.schools),
+            "employer_count": len(self.employers),
 
             # 存量指标
             "employment_rate": employment_rate,
@@ -343,6 +374,7 @@ class TalentMarketModel(Model):
             "herding_index": herding_index,
             "avg_hire_threshold": avg_hire_threshold,
             "avg_cross_major_tolerance": avg_cross_major_tolerance,
+            "avg_training_quality": avg_training_quality,
         }
 
     def calculate_mismatch_index(self):
@@ -391,6 +423,18 @@ class TalentMarketModel(Model):
             }
 
         self.last_round_major_stats = stats
+    
+    def get_runtime_info(self):
+        """
+        返回本次仿真实际参与的主体规模与运行信息。
+        """
+        return {
+            "student_count": len(self.students),
+            "school_count": len(self.schools),
+            "employer_count": len(self.employers),
+            "major_count": len(self.majors),
+            "data_mode": self.data_config.get("data_mode", "database"),
+        }
 
     def run_model(self, steps=5):
         for i in range(steps):

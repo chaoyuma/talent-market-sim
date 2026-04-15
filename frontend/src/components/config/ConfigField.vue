@@ -1,7 +1,9 @@
 <script setup>
 // 通用参数项组件
 // 根据 fieldMeta 自动决定渲染 checkbox / select / number / text
+// 并在参数名称后面自动显示范围与步长信息
 
+import { computed } from "vue";
 import FieldLabel from "../common/FieldLabel.vue";
 import { fieldMeta } from "../../utils/fieldMeta";
 
@@ -21,7 +23,47 @@ const props = defineProps({
 const emit = defineEmits(["update:value"]);
 
 // 当前字段元数据
-const meta = fieldMeta[props.fieldKey] || {};
+const meta = computed(() => fieldMeta[props.fieldKey] || {});
+
+/**
+ * 构造显示标签：
+ * 例如：
+ * 兴趣权重（范围 0~1，步长 0.01）
+ * 仿真轮次（最小值 1，步长 1）
+ */
+const displayLabel = computed(() => {
+  const label = meta.value.label || props.fieldKey;
+  const type = meta.value.type;
+
+  // checkbox / text / select 不强制拼范围
+  if (type !== "number") {
+    return label;
+  }
+
+  const min = meta.value.min;
+  const max = meta.value.max;
+  const step = meta.value.step;
+
+  const parts = [];
+
+  if (min !== undefined && max !== undefined) {
+    parts.push(`${min}~${max}`);
+  } else if (min !== undefined) {
+    parts.push(`≥${min}`);
+  } else if (max !== undefined) {
+    parts.push(`≤${max}`);
+  }
+
+  if (step !== undefined) {
+    parts.push(`${step}`);
+  }
+
+  if (parts.length === 0) {
+    return label;
+  }
+
+  return `${label}（${parts.join("，")}）`;
+});
 
 /**
  * 处理输入框变更
@@ -30,7 +72,7 @@ const meta = fieldMeta[props.fieldKey] || {};
 function handleInput(event) {
   const rawValue = event.target.value;
 
-  if (meta.type === "number") {
+  if (meta.value.type === "number") {
     emit("update:value", Number(rawValue));
     return;
   }
@@ -58,7 +100,7 @@ function handleCheckbox(event) {
 <template>
   <!-- 复选框 -->
   <div v-if="meta.type === 'checkbox'" class="checkbox-row">
-    <FieldLabel :label="meta.label || fieldKey" :tooltip="meta.tooltip || ''" />
+    <FieldLabel :label="displayLabel" :tooltip="meta.tooltip || ''" />
     <input
       :checked="!!value"
       @change="handleCheckbox"
@@ -68,7 +110,7 @@ function handleCheckbox(event) {
 
   <!-- 其他类型 -->
   <div v-else class="form-row">
-    <FieldLabel :label="meta.label || fieldKey" :tooltip="meta.tooltip || ''" />
+    <FieldLabel :label="displayLabel" :tooltip="meta.tooltip || ''" />
 
     <!-- 数字 / 文本输入框 -->
     <input

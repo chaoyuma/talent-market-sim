@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
 from sqlalchemy.sql import func
-
 from app.core.database import Base
 
 
@@ -17,5 +16,9 @@ class Job(Base):
     salary_base = Column(Float, nullable=False, default=10.0)
     city = Column(String(64), nullable=True)
     cross_major_allowed = Column(Boolean, nullable=False, default=True)
+
+    career_growth = Column(Float, nullable=False, default=0.5)
+    city_tier = Column(Float, nullable=False, default=0.5)
+    industry_heat = Column(Float, nullable=False, default=1.0)
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

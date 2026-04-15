@@ -41,9 +41,18 @@ def update_experiment_status(
     return obj
 
 
-def list_experiments(db: Session):
-    return db.query(Experiment).order_by(Experiment.created_at.desc()).all()
+
+def list_experiments(db):
+    return (
+        db.query(Experiment)
+        .order_by(Experiment.created_at.desc())
+        .all()
+    )
 
 
-def get_experiment_by_experiment_id(db: Session, experiment_id: str):
-    return db.query(Experiment).filter(Experiment.experiment_id == experiment_id).first()
+def get_experiment_by_experiment_id(db, experiment_id: str):
+    return (
+        db.query(Experiment)
+        .filter(Experiment.experiment_id == experiment_id)
+        .first()
+    )

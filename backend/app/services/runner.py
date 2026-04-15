@@ -65,7 +65,10 @@ def run_simulation(req):
             experiment_id=experiment_id,
         )
 
-        # 6. 继续保留 JSON 备份
+        # 6. 补充实际运行规模信息
+        payload["actual_runtime"] = model.get_runtime_info()
+
+        # 7. 继续保留 JSON 备份
         project_root = Path(__file__).resolve().parents[2]
         output_dir = project_root / settings.OUTPUT_DIR
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -79,7 +82,7 @@ def run_simulation(req):
     except Exception:
         # 先回滚当前失败事务，否则 Session 会处于 pending rollback 状态
         db.rollback()
-        
+
         update_experiment_status(
             db=db,
             experiment_id=experiment_id,

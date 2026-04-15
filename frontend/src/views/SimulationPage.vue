@@ -14,7 +14,6 @@ import PageHeader from "../components/common/PageHeader.vue";
 // =========================
 import ConfigSection from "../components/config/ConfigSection.vue";
 import ResultSection from "../components/result/ResultSection.vue";
-import HistorySection from "../components/result/HistorySection.vue";
 
 // =========================
 // 工具与逻辑
@@ -51,8 +50,8 @@ function handleChangePanel(panelName) {
   >
     <!-- 页面头部 -->
     <PageHeader
-      title="人才市场供需动态仿真系统"
-      subtitle="围绕学生学习与就业决策，模拟学校、企业反馈和环境场景影响。"
+      title="仿真首页"
+      subtitle="配置参数、运行实验并查看当前结果。"
     />
 
     <!-- 参数配置总区 -->
@@ -67,8 +66,5 @@ function handleChangePanel(panelName) {
 
     <!-- 结果展示区 -->
     <ResultSection :result="result" />
-
-    <!-- 历史实验区 -->
-    <HistorySection />
   </div>
 </template>

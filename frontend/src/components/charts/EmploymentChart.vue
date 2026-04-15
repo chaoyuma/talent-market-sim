@@ -26,15 +26,8 @@ const option = computed(() => buildEmploymentChartOption(props.results));
 </script>
 
 <template>
-  <div
-    style="
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 16px;
-      background: #fff;
-    "
-  >
-    <h3 style="margin-top: 0;">就业率变化</h3>
+  <div class="ui-card">
+    <h3 class="subsection-title">就业变化趋势</h3>
     <VChart :option="option" autoresize style="height: 320px;" />
   </div>
 </template>

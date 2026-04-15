@@ -1,0 +1,14 @@
+﻿major_name,industry,match_score
+CS,Internet,1.0
+CS,Finance,0.6
+CS,Manufacturing,0.4
+Finance,Finance,1.0
+Finance,Internet,0.5
+Finance,Education,0.3
+Mechanical,Manufacturing,1.0
+Mechanical,Construction,0.6
+Mechanical,Internet,0.2
+Education,Education,1.0
+Medicine,Healthcare,1.0
+Civil,Construction,1.0
+Civil,Manufacturing,0.4

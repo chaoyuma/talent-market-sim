@@ -6,3 +6,5 @@ from app.models.job import Job
 from app.models.experiment import Experiment
 from app.models.experiment_metric import ExperimentMetric
 from app.models.report import Report
+from app.models.major_industry_mapping import MajorIndustryMapping
+from app.models.system_metadata import SystemMetadata

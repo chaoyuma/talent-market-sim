@@ -25,6 +25,7 @@ export const defaultForm = {
     employment_feedback_weight: 0.6,
     market_feedback_weight: 0.4,
     adjustment_lag: 1,
+    resource_support: 0.03,
   },
   employer_config: {
     major_preference_strength: 0.8,
@@ -32,6 +33,8 @@ export const defaultForm = {
     hire_threshold: 0.55,
     cross_major_tolerance: 0.6,
     salary_elasticity: 0.05,
+    threshold_relax_speed: 0.03,
+    tolerance_increase_speed: 0.03,
   },
   scenario_config: {
     macro_economy: 1.0,
@@ -41,6 +44,8 @@ export const defaultForm = {
     city_attractiveness_gap: 0.5,
     technology_change_rate: 0.2,
     information_shock: 0.0,
+    enterprise_feedback_lag: 2,
+    school_feedback_lag: 4,
   },
   type_config: {
     employment_oriented_ratio: 0.3,
@@ -73,7 +78,7 @@ export const defaultForm = {
     use_for_scenario_generation: true,
     use_for_result_explanation: true,
     use_for_report_generation: true,
-    model_name: "gpt-4o-mini",
+    model_name: "qwen-plus",
     temperature: 0.3,
     max_tokens: 1500,
   },
