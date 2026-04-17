@@ -29,6 +29,14 @@ defineProps({
             <th>cross_major_rate</th>
             <th>avg_salary</th>
             <th>avg_satisfaction</th>
+            <th>low_satisfaction_employment_rate</th>
+            <th>same_region_employment_rate</th>
+            <th>carryover_student_count</th>
+            <th>new_cohort_student_count</th>
+            <th>new_cohort_employment_rate</th>
+            <th>carryover_employment_rate</th>
+            <th>carryover_pool_share</th>
+            <th>avg_carryover_rounds</th>
 
             <!-- 流量指标 -->
             <th>active_job_seekers</th>
@@ -36,6 +44,12 @@ defineProps({
             <th>round_filled_jobs</th>
             <th>round_vacancy_rate</th>
             <th>round_new_employment_rate</th>
+            <th>round_application_count</th>
+            <th>round_offer_count</th>
+            <th>round_accepted_offer_count</th>
+            <th>round_rejected_offer_count</th>
+            <th>avg_applications_per_job</th>
+            <th>avg_offers_per_student</th>
 
             <!-- 结构与机制指标 -->
             <th>mismatch_index</th>
@@ -61,6 +75,14 @@ defineProps({
             <td>{{ item.cross_major_rate }}</td>
             <td>{{ item.avg_salary }}</td>
             <td>{{ item.avg_satisfaction }}</td>
+            <td>{{ item.low_satisfaction_employment_rate }}</td>
+            <td>{{ item.same_region_employment_rate }}</td>
+            <td>{{ item.carryover_student_count }}</td>
+            <td>{{ item.new_cohort_student_count }}</td>
+            <td>{{ item.new_cohort_employment_rate }}</td>
+            <td>{{ item.carryover_employment_rate }}</td>
+            <td>{{ item.carryover_pool_share }}</td>
+            <td>{{ item.avg_carryover_rounds }}</td>
 
             <!-- 流量指标 -->
             <td>{{ item.active_job_seekers }}</td>
@@ -68,6 +90,12 @@ defineProps({
             <td>{{ item.round_filled_jobs }}</td>
             <td>{{ item.round_vacancy_rate }}</td>
             <td>{{ item.round_new_employment_rate }}</td>
+            <td>{{ item.round_application_count }}</td>
+            <td>{{ item.round_offer_count }}</td>
+            <td>{{ item.round_accepted_offer_count }}</td>
+            <td>{{ item.round_rejected_offer_count }}</td>
+            <td>{{ item.avg_applications_per_job }}</td>
+            <td>{{ item.avg_offers_per_student }}</td>
 
             <!-- 结构与机制指标 -->
             <td>{{ item.mismatch_index }}</td>

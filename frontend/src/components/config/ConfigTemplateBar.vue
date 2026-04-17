@@ -1,14 +1,11 @@
 <script setup>
-// 参数模板工具条
-// 用于保存当前模板、选择模板、加载模板
-
 defineProps({
   templateList: {
     type: Array,
     default: () => [],
   },
   selectedConfigId: {
-    type: String,
+    type: [String, Number],
     default: "",
   },
   configName: {
@@ -43,87 +40,84 @@ const emit = defineEmits([
 </script>
 
 <template>
-  <div class="ui-card section-gap">
-    <h3 class="subsection-title">参数模板</h3>
-
-    <div class="form-row">
-      <label style="width: 220px; font-weight: 500;">模板名称</label>
-      <input
-        class="ui-input"
-        :value="configName"
-        @input="emit('update:configName', $event.target.value)"
-        type="text"
-        placeholder="例如：baseline_v1"
-      />
-    </div>
-
-    <div class="form-row">
-      <label style="width: 220px; font-weight: 500;">模板说明</label>
-      <input
-        class="ui-input"
-        :value="configDescription"
-        @input="emit('update:configDescription', $event.target.value)"
-        type="text"
-        placeholder="例如：基准场景第一版参数"
-      />
-    </div>
-
-    <div class="form-row">
-      <label style="width: 220px; font-weight: 500;">选择已有模板</label>
-      <select
-        class="ui-select"
-        :value="selectedConfigId"
-        @change="emit('update:selectedConfigId', $event.target.value)"
+  <div
+    style="
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fafafa;
+    "
+  >
+    <!-- 选择模板放最前 -->
+    <select
+      class="ui-select"
+      :value="selectedConfigId"
+      @change="emit('update:selectedConfigId', $event.target.value)"
+      style="width: 240px;"
+    >
+      <option value="">选择已有模板</option>
+      <option
+        v-for="item in templateList"
+        :key="item.id"
+        :value="item.id"
       >
-        <option value="">请选择模板</option>
-        <option
-          v-for="item in templateList"
-          :key="item.config_id"
-          :value="item.config_id"
-        >
-          {{ item.config_name }}（{{ item.config_version }}）
-        </option>
-      </select>
-    </div>
+        {{ item.template_name }}
+      </option>
+    </select>
 
-    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
-      <button
-        class="ui-btn"
-        :disabled="configLoading"
-        @click="emit('save-template')"
-      >
-        {{ configLoading ? "处理中..." : "保存参数模板" }}
-      </button>
+    <input
+      class="ui-input"
+      :value="configName"
+      @input="emit('update:configName', $event.target.value)"
+      type="text"
+      placeholder="模板名称"
+      style="width: 180px;"
+    />
 
-      <button
-        class="ui-btn-primary"
-        :disabled="configLoading"
-        @click="emit('load-template')"
-      >
-        {{ configLoading ? "处理中..." : "加载参数模板" }}
-      </button>
-    </div>
+    <input
+      class="ui-input"
+      :value="configDescription"
+      @input="emit('update:configDescription', $event.target.value)"
+      type="text"
+      placeholder="模板说明"
+      style="width: 320px;"
+    />
 
-    <div v-if="configError" class="error-text" style="margin-top: 12px;">
-      {{ configError }}
-    </div>
+    <button
+      type="button"
+      class="ui-btn"
+      :disabled="configLoading"
+      @click="emit('save-template')"
+    >
+      {{ configLoading ? "处理中..." : "保存" }}
+    </button>
+
+    <button
+      type="button"
+      class="ui-btn-primary"
+      :disabled="configLoading"
+      @click="emit('load-template')"
+    >
+      {{ configLoading ? "处理中..." : "加载" }}
+    </button>
 
     <div
       v-if="currentConfigInfo"
-      style="
-        margin-top: 12px;
-        padding: 10px 12px;
-        background: #f5f7fa;
-        border: 1px solid #e5e6eb;
-        border-radius: 8px;
-        font-size: 14px;
-      "
+      style="font-size: 13px; color: #475467;"
     >
-      当前模板：
-      <b>{{ currentConfigInfo.config_name }}</b>
-      <span v-if="currentConfigInfo.config_version">
-        （{{ currentConfigInfo.config_version }}）
-      </span>
+      当前：<b>{{ currentConfigInfo.template_name }}</b>
+    </div>
+
+    <div
+      v-if="configError"
+      class="error-text"
+      style="width: 100%; font-size: 13px;"
+    >
+      {{ configError }}
     </div>
   </div>
 </template>

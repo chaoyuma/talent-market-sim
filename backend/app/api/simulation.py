@@ -4,7 +4,7 @@ from app.services.runner import run_simulation
 
 router = APIRouter()
 
-
+# 执行仿真接口
 @router.post("/run")
 def run_simulation_api(req: SimulationRequest):
     result = run_simulation(req)

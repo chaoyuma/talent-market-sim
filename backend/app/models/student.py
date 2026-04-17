@@ -3,6 +3,11 @@ from sqlalchemy.sql import func
 from app.core.database import Base
 
 
+from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy.sql import func
+from app.core.database import Base
+
+
 class Student(Base):
     __tablename__ = "students"
 
@@ -15,7 +20,7 @@ class Student(Base):
 
     ability = Column(Float, nullable=False, default=0.5)
     interest_major = Column(String(64), nullable=True)
-    city_preference = Column(String(64), nullable=True)  # 保留旧字段
+    city_preference = Column(String(64), nullable=True)
     city_tier_preference = Column(Float, nullable=False, default=0.5)
 
     expected_salary = Column(Float, nullable=False, default=10.0)
@@ -23,5 +28,13 @@ class Student(Base):
     information_level = Column(Float, nullable=False, default=0.8)
     career_growth_preference = Column(Float, nullable=False, default=0.5)
     learning_effort = Column(Float, nullable=False, default=0.7)
+
+  
+    home_region = Column(String(64), nullable=True)
+    school_city = Column(String(128), nullable=True)
+    school_region = Column(String(64), nullable=True)
+    stay_school_city_preference = Column(Float, nullable=True)
+    go_big_city_preference = Column(Float, nullable=True)
+    return_home_preference = Column(Float, nullable=True)
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

@@ -1,7 +1,0 @@
-﻿major_code,major_name,category,skill_direction,heat_init,mobility,salary_expectation,policy_support_weight
-M001,CS,STEM,"Software,AI,Data",1.2,0.8,0.95,0.8
-M002,Finance,Economics,"Accounting,Investment,Risk",1.0,0.65,0.85,0.5
-M003,Mechanical,Engineering,"Design,Manufacturing,Equipment",0.9,0.55,0.75,0.6
-M004,Education,Social,"Teaching,Training,PublicService",0.7,0.4,0.65,0.7
-M005,Medicine,Health,"Clinical,Health,PublicHealth",1.1,0.6,0.9,0.85
-M006,Civil,Engineering,"Construction,Infrastructure,Survey",0.85,0.5,0.72,0.65

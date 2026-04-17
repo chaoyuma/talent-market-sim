@@ -1,11 +1,15 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { generateResultExplanation } from "../../api/analysis";
 
 const props = defineProps({
   result: {
     type: Object,
     default: null,
+  },
+  initialExplanation: {
+    type: String,
+    default: "",
   },
 });
 
@@ -19,6 +23,14 @@ const latest = computed(() => {
   }
   return props.result.results[props.result.results.length - 1];
 });
+
+watch(
+  () => props.initialExplanation,
+  (value) => {
+    explanation.value = value || "";
+  },
+  { immediate: true }
+);
 
 async function handleGenerateExplanation() {
   if (!props.result) {
@@ -36,6 +48,7 @@ async function handleGenerateExplanation() {
       actual_runtime: props.result.actual_runtime || null,
       summary: props.result.summary || null,
       latest_result: latest.value,
+      structure_analysis: props.result.structure_analysis || null,
       results: props.result.results || [],
     };
 

@@ -1,4 +1,6 @@
 <script setup>
+// 顶部导航栏：负责页签切换
+
 defineProps({
   activeTab: {
     type: String,
@@ -7,9 +9,12 @@ defineProps({
 });
 
 const emit = defineEmits(["change-tab"]);
-
 const activeBtnStyle = "background:#1570ef;color:#fff;border-color:#1570ef;";
 
+/**
+ * 切换页签
+ * @param {string} tab 页签标识
+ */
 function switchTab(tab) {
   emit("change-tab", tab);
 }
@@ -27,20 +32,12 @@ function switchTab(tab) {
       margin-bottom: 20px;
     "
   >
-    <div
-      style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-      "
-    >
+    <div class="section-toolbar">
       <div style="font-size: 20px; font-weight: 700; color: #101828;">
         人才市场供需动态仿真系统
       </div>
 
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <div class="toolbar-group">
         <button
           class="ui-btn"
           :style="activeTab === 'simulation' ? activeBtnStyle : ''"
@@ -63,6 +60,22 @@ function switchTab(tab) {
           @click="switchTab('history')"
         >
           历史记录
+        </button>
+
+        <button
+          class="ui-btn"
+          :style="activeTab === 'report' ? activeBtnStyle : ''"
+          @click="switchTab('report')"
+        >
+          分析报告
+        </button>
+
+        <button
+          class="ui-btn"
+          :style="activeTab === 'report-history' ? activeBtnStyle : ''"
+          @click="switchTab('report-history')"
+        >
+          历史报告
         </button>
       </div>
     </div>

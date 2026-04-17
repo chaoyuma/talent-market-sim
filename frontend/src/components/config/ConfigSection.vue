@@ -1,4 +1,6 @@
 <script setup>
+import { ref } from "vue";
+
 import ActionBar from "../common/ActionBar.vue";
 import SectionCard from "../common/SectionCard.vue";
 
@@ -10,9 +12,10 @@ import ScenarioConfigPanel from "./ScenarioConfigPanel.vue";
 import AdvancedConfigPanel from "./AdvancedConfigPanel.vue";
 import LLMConfigPanel from "./LLMConfigPanel.vue";
 import DataConfigPanel from "./DataConfigPanel.vue";
+import TypeConfigPanel from "./TypeConfigPanel.vue";
 import ConfigTemplateBar from "./ConfigTemplateBar.vue";
 
-const props = defineProps({
+defineProps({
   form: {
     type: Object,
     required: true,
@@ -35,7 +38,7 @@ const props = defineProps({
     default: () => [],
   },
   selectedConfigId: {
-    type: String,
+    type: [String, Number],
     default: "",
   },
   configName: {
@@ -70,6 +73,8 @@ const emit = defineEmits([
   "load-template",
 ]);
 
+const collapsed = ref(false);
+
 function handleChangePanel(panelName) {
   emit("change-panel", panelName);
 }
@@ -77,95 +82,125 @@ function handleChangePanel(panelName) {
 function handleRun() {
   emit("run");
 }
+
+function toggleCollapsed() {
+  collapsed.value = !collapsed.value;
+}
 </script>
 
 <template>
-  <div
-    style="
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 24px;
-      background: #fafafa;
-    "
-  >
-    <h2 style="margin-top: 0;">参数配置</h2>
+  <div class="ui-card section-gap" style="padding: 16px 18px; margin-bottom: 18px;">
+    <!-- 顶部标题 -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px;">
+      <h2 style="margin: 0; font-size: 24px; line-height: 1.2;">参数配置</h2>
 
-    <!-- 参数模板条 -->
-    <ConfigTemplateBar
-      :templateList="templateList"
-      :selectedConfigId="selectedConfigId"
-      :configName="configName"
-      :configDescription="configDescription"
-      :configLoading="configLoading"
-      :configError="configError"
-      :currentConfigInfo="currentConfigInfo"
-      @update:selectedConfigId="emit('update:selectedConfigId', $event)"
-      @update:configName="emit('update:configName', $event)"
-      @update:configDescription="emit('update:configDescription', $event)"
-      @save-template="emit('save-template')"
-      @load-template="emit('load-template')"
-    />
+      <button
+        type="button"
+        class="ui-btn"
+        style="padding: 6px 12px; font-size: 13px;"
+        @click="toggleCollapsed"
+      >
+        {{ collapsed ? "展开参数" : "收起参数" }}
+      </button>
+    </div>
 
-    <ActionBar
-      :activePanel="activePanel"
-      :loading="loading"
-      @change-panel="handleChangePanel"
-      @run="handleRun"
-    />
+    <!-- 模板栏 -->
+    <div style="margin-bottom: 14px;">
+      <ConfigTemplateBar
+        :templateList="templateList"
+        :selectedConfigId="selectedConfigId"
+        :configName="configName"
+        :configDescription="configDescription"
+        :configLoading="configLoading"
+        :configError="configError"
+        :currentConfigInfo="currentConfigInfo"
+        @update:selectedConfigId="emit('update:selectedConfigId', $event)"
+        @update:configName="emit('update:configName', $event)"
+        @update:configDescription="emit('update:configDescription', $event)"
+        @save-template="emit('save-template')"
+        @load-template="emit('load-template')"
+      />
+    </div>
 
-    <div v-if="error" style="margin-bottom: 16px; color: red;">
+    <!-- 标签栏 + 运行按钮 -->
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      "
+    >
+      <div style="flex: 1; min-width: 520px;">
+        <ActionBar
+          :activePanel="activePanel"
+          :loading="loading"
+          @change-panel="handleChangePanel"
+          @run="handleRun"
+        />
+      </div>
+    </div>
+
+    <div v-if="error" style="margin-bottom: 12px; color: red;">
       {{ error }}
     </div>
 
-    <div
-      style="
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-        gap: 20px;
-      "
-    >
-      <template v-if="activePanel === 'base'">
-        <SectionCard title="基础实验设置">
-          <BaseConfigPanel v-model="form.base_config" />
-        </SectionCard>
-      </template>
+    <!-- 参数面板 -->
+    <div v-if="!collapsed">
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+          gap: 16px;
+        "
+      >
+        <template v-if="activePanel === 'base'">
+          <SectionCard title="基础实验设置">
+            <BaseConfigPanel v-model="form.base_config" />
+          </SectionCard>
+        </template>
 
-      <template v-if="activePanel === 'decision'">
-        <SectionCard title="学生决策参数">
-          <StudentConfigPanel v-model="form.student_config" />
-        </SectionCard>
-      </template>
+        <template v-if="activePanel === 'decision'">
+          <SectionCard title="学生决策参数">
+            <StudentConfigPanel v-model="form.student_config" />
+          </SectionCard>
+        </template>
 
-      <template v-if="activePanel === 'feedback'">
-        <SectionCard title="学校反馈参数">
-          <SchoolConfigPanel v-model="form.school_config" />
-        </SectionCard>
+        <template v-if="activePanel === 'feedback'">
+          <SectionCard title="学校反馈参数">
+            <SchoolConfigPanel v-model="form.school_config" />
+          </SectionCard>
 
-        <SectionCard title="企业反馈参数">
-          <EmployerConfigPanel v-model="form.employer_config" />
-        </SectionCard>
-      </template>
+          <SectionCard title="企业反馈参数">
+            <EmployerConfigPanel v-model="form.employer_config" />
+          </SectionCard>
+        </template>
 
-      <template v-if="activePanel === 'scenario'">
-        <SectionCard title="基础场景参数">
-          <ScenarioConfigPanel v-model="form.scenario_config" />
-        </SectionCard>
+        <template v-if="activePanel === 'scenario'">
+          <SectionCard title="基础场景参数">
+            <ScenarioConfigPanel v-model="form.scenario_config" />
+          </SectionCard>
 
-        <SectionCard title="高级场景参数">
-          <AdvancedConfigPanel v-model="form.scenario_config" />
-        </SectionCard>
-      </template>
+          <SectionCard title="高级场景参数">
+            <AdvancedConfigPanel v-model="form.scenario_config" />
+          </SectionCard>
+        </template>
 
-      <template v-if="activePanel === 'advanced'">
-        <SectionCard title="数据配置">
-          <DataConfigPanel v-model="form.data_config" />
-        </SectionCard>
+        <template v-if="activePanel === 'advanced'">
+          <SectionCard title="机制开关与类型配置">
+            <TypeConfigPanel v-model="form.type_config" />
+          </SectionCard>
+          <SectionCard title="数据配置">
+            <DataConfigPanel v-model="form.data_config" />
+          </SectionCard>
 
-        <SectionCard title="智能配置">
-          <LLMConfigPanel v-model="form.llm_config" />
-        </SectionCard>
-      </template>
+          <SectionCard title="智能配置">
+            <LLMConfigPanel v-model="form.llm_config" />
+          </SectionCard>
+        </template>
+      </div>
     </div>
   </div>
 </template>

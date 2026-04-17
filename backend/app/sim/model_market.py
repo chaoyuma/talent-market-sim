@@ -1,5 +1,5 @@
 # backend/app/sim/model_market.py
-
+# 需求信息传导模块
 from collections import Counter, defaultdict
 
 
@@ -52,6 +52,8 @@ def update_major_market_heat(model):
     market_avg_salary = all_salary_sum / all_salary_count if all_salary_count > 0 else 1.0
 
     new_market_heat = {}
+    model.latest_major_market_signals = {}
+    amplification = float(model.scenario_config.get("market_heat_amplification", 1.0))
 
     for major in model.majors:
         old_heat = float(model.major_market_heat.get(major, 1.0))
@@ -74,6 +76,7 @@ def update_major_market_heat(model):
             salary_signal = avg_major_salary / market_avg_salary
         else:
             salary_signal = 1.0
+            avg_major_salary = 0.0
 
         # 归一到较稳范围
         salary_signal = max(0.5, min(1.5, salary_signal))
@@ -82,11 +85,20 @@ def update_major_market_heat(model):
         # old_heat 保留惯性，避免热度剧烈波动
         new_heat = (
             0.50 * old_heat
-            + 0.25 * job_share * 3.0
-            + 0.15 * vacancy_pressure * 2.0
+            + 0.25 * job_share * 3.0 * amplification
+            + 0.15 * vacancy_pressure * 2.0 * amplification
             + 0.10 * salary_signal
         )
 
         new_market_heat[major] = max(0.3, min(1.5, new_heat))
+        model.latest_major_market_signals[major] = {
+            "job_count": job_count,
+            "filled_count": filled_count,
+            "vacancy_rate": (job_count - filled_count) / job_count if job_count else 0.0,
+            "job_share": job_share,
+            "avg_salary": avg_major_salary,
+            "salary_signal": salary_signal,
+            "market_heat": new_market_heat[major],
+        }
 
     model.major_market_heat = new_market_heat

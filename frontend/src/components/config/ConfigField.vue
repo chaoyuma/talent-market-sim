@@ -32,12 +32,17 @@ const meta = computed(() => fieldMeta[props.fieldKey] || {});
  * 仿真轮次（最小值 1，步长 1）
  */
 const displayLabel = computed(() => {
-  const label = meta.value.label || props.fieldKey;
+  const baseLabel = meta.value.label || props.fieldKey;
+  const bilingualLabel =
+    baseLabel === props.fieldKey
+      ? props.fieldKey
+      : `${baseLabel}（${props.fieldKey}）`;
+
   const type = meta.value.type;
 
-  // checkbox / text / select 不强制拼范围
+  // checkbox / text / select 不拼范围说明
   if (type !== "number") {
-    return label;
+    return bilingualLabel;
   }
 
   const min = meta.value.min;
@@ -55,14 +60,14 @@ const displayLabel = computed(() => {
   }
 
   if (step !== undefined) {
-    parts.push(`${step}`);
+    parts.push(`步长 ${step}`);
   }
 
   if (parts.length === 0) {
-    return label;
+    return bilingualLabel;
   }
 
-  return `${label}（${parts.join("，")}）`;
+  return `${bilingualLabel}｜${parts.join("，")}`;
 });
 
 /**

@@ -4,6 +4,8 @@
 import ConfigField from "./ConfigField.vue";
 import { studentConfigFields } from "../../utils/panelFields";
 
+
+// console.log("DEBUG studentConfigFields =", studentConfigFields);
 // 接收父组件的 v-model
 const props = defineProps({
   modelValue: {

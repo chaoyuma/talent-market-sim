@@ -1,6 +1,5 @@
 # backend/app/sim/model.py
-
-from collections import Counter
+# 调度仿真流程，维护主体容器，收集指标数据，提供运行信息接口
 import random
 
 from mesa import Model
@@ -17,12 +16,7 @@ from app.sim.model_market import update_major_market_heat
 class TalentMarketModel(Model):
     """
     人才市场 ABM 主模型。
-
-    职责：
-    - 保存配置
-    - 初始化主体容器
-    - 调度单轮仿真流程
-    - 输出运行信息
+ 
     """
 
     def __init__(
@@ -89,6 +83,9 @@ class TalentMarketModel(Model):
             "Mechanical": 0.75,
             "Education": 0.65,
         }
+        self.major_mobility = {}
+        self.major_policy_support_weight = {}
+        self.major_industry_match = {}
 
         # -------------------------
         # 3. 主体容器
@@ -102,6 +99,9 @@ class TalentMarketModel(Model):
         # -------------------------
         self.last_round_major_stats = {}
         self.metrics_history = []
+        self.previous_major_distribution = {}
+        self.major_market_heat_history = []
+        self.latest_major_market_signals = {}
 
         # 学校专业调整偏置
         self.major_school_adjustment_bias = {}
@@ -113,10 +113,29 @@ class TalentMarketModel(Model):
         self.db_data = {}
         self.job_templates = []
 
+        # 单轮过程指标缓存
+        self.round_application_count = 0
+        self.round_offer_count = 0
+        self.round_accepted_offer_count = 0
+        self.round_rejected_offer_count = 0
+        self.round_carryover_student_count = 0
+        self.round_new_cohort_student_count = 0
+
+        # 跨 step 累计结果缓存，用于真正意义上的“累计指标”
+        self.cumulative_seen_student_ids = set()
+        self.cumulative_employed_student_ids = set()
+        self.cumulative_matching_count = 0
+        self.cumulative_cross_major_count = 0
+        self.cumulative_low_satisfaction_count = 0
+        self.cumulative_same_region_count = 0
+        self.cumulative_salary_sum = 0.0
+        self.cumulative_satisfaction_sum = 0.0
+
         # -------------------------
         # 5. 创建主体
         # -------------------------
         create_static_agents(self)
+        self.major_market_heat_history.append(dict(self.major_market_heat))
 
         # -------------------------
         # 6. 学校平均培养质量
@@ -127,6 +146,12 @@ class TalentMarketModel(Model):
         """
         单轮仿真主流程。
         """
+        self.round_application_count = 0
+        self.round_offer_count = 0
+        self.round_accepted_offer_count = 0
+        self.round_rejected_offer_count = 0
+        self.round_carryover_student_count = 0
+        self.round_new_cohort_student_count = 0
         
         # 1. 重置学生本轮状态
         refresh_students_for_new_cohort(self, step_idx)
@@ -152,29 +177,40 @@ class TalentMarketModel(Model):
             for employer in self.employers:
                 employer.publish_jobs()
 
-            # 学生投递岗位
-            for student in active_job_seekers:
-                student.apply_jobs()
+            matching_rounds = int(self.scenario_config.get("matching_rounds_per_step", 1))
+            for _round_idx in range(max(1, matching_rounds)):
+                active_job_seekers = [s for s in self.students if not s.employed]
+                if not active_job_seekers:
+                    break
 
-            # 企业发放 offer
-            for employer in self.employers:
-                employer.hire()
+                for student in active_job_seekers:
+                    student.apply_jobs()
 
-            # 学生选择 offer
-            for student in active_job_seekers:
-                student.choose_offer()
+                offers_before = self.round_offer_count
+                for employer in self.employers:
+                    employer.hire()
+
+                for student in active_job_seekers:
+                    student.choose_offer()
+
+                if self.round_offer_count == offers_before:
+                    break
         else:
             # 若无活跃求职者，则清空本轮岗位
             for employer in self.employers:
                 employer.open_jobs = []
 
         # 6. 企业反馈（短时滞）
-        if (step_idx + 1) % self.enterprise_feedback_lag == 0:
+        if (
+            self.type_config.get("enable_feedback_adjustment", True)
+            and (step_idx + 1) % self.enterprise_feedback_lag == 0
+        ):
             for employer in self.employers:
                 employer.adjust_strategy()
 
         # 6. 更新市场热度（需求侧向供给侧传导）
         update_major_market_heat(self)
+        self.major_market_heat_history.append(dict(self.major_market_heat))
 
         # 7. 更新专业统计
         update_major_stats(self)
@@ -185,7 +221,10 @@ class TalentMarketModel(Model):
                 school.record_feedback()
 
         # 9. 学校反馈（长时滞）
-        if (step_idx + 1) % self.school_feedback_lag == 0:
+        if (
+            self.type_config.get("enable_feedback_adjustment", True)
+            and (step_idx + 1) % self.school_feedback_lag == 0
+        ):
             # 本轮重新记录学校对各专业的调整偏置
             self.major_school_adjustment_bias = {}
 

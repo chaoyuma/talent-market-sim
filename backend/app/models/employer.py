@@ -26,6 +26,15 @@ class Employer(Base):
     salary_elasticity = Column(Float, nullable=False, default=0.05)
     threshold_relax_speed = Column(Float, nullable=False, default=0.03)
     tolerance_increase_speed = Column(Float, nullable=False, default=0.03)
+
+
+    threshold_tighten_speed = Column(Float, nullable=False, default=0.02)
+    tolerance_decrease_speed = Column(Float, nullable=False, default=0.02)
+
     stability = Column(Float, nullable=False, default=0.6)
+
+
+    size_type = Column(String(32), nullable=True)
+    base_job_count = Column(Integer, nullable=False, default=8)
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

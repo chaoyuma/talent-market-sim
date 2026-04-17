@@ -1,3 +1,6 @@
+# backend/app/sim/profiles.py
+# 主体类型画像定义
+
 STUDENT_TYPE_PROFILES = {
     "employment_oriented": {
         "interest_weight": 0.2,

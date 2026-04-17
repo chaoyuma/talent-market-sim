@@ -61,9 +61,18 @@ class SchoolAgent(Agent):
         供结构分析模块展示。
         """
         lag = int(self.model.school_feedback_lag)
-        speed = float(self.model.school_config.get("capacity_adjust_speed", 0.1))
-        employment_weight = float(self.model.school_config.get("employment_feedback_weight", 0.6))
-        market_weight = float(self.model.school_config.get("market_feedback_weight", 0.4))
+        speed = float(self.profile.get(
+            "capacity_adjust_speed",
+            self.model.school_config.get("capacity_adjust_speed", 0.1),
+        ))
+        employment_weight = float(self.profile.get(
+            "employment_feedback_weight",
+            self.model.school_config.get("employment_feedback_weight", 0.6),
+        ))
+        market_weight = float(self.profile.get(
+            "market_feedback_weight",
+            self.model.school_config.get("market_feedback_weight", 0.4),
+        ))
 
         for major in self.model.majors:
             history = self.major_feedback_history.get(major, [])
@@ -101,7 +110,7 @@ class SchoolAgent(Agent):
                 self.model.major_school_adjustment_bias[major] = []
 
             self.model.major_school_adjustment_bias[major].append(bias)
-            print(f"DEBUG school={self.name}, major={major}, old={old_capacity}, new={new_capacity}, bias={bias}")
+            #print(f"DEBUG school={self.name}, major={major}, old={old_capacity}, new={new_capacity}, bias={bias}")
 
     def adjust_training_quality(self):
         """
